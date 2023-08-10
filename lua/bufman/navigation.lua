@@ -5,7 +5,7 @@ local M = {}
 function M.nav_file(id, command)
 	if command == nil then command = 'edit' end
 
-	local mark = list_manager.marks[id]
+	local mark = list_manager.cache[id]
 	if not mark then
 		return
 	else
@@ -15,7 +15,7 @@ end
 
 local function get_current_buf_line()
 	local current_buf_id = vim.fn.bufnr()
-	for idx, mark in pairs(list_manager.marks) do
+	for idx, mark in pairs(list_manager.cache) do
 		if mark.bufnr == current_buf_id then return idx end
 	end
 	return -1
@@ -29,8 +29,8 @@ function M.goto(direction)
 
 	local target_line = current_line + direction
 	if target_line < 1 then
-		target_line = #list_manager.marks
-	elseif target_line > #list_manager.marks then
+		target_line = #list_manager.cache
+	elseif target_line > #list_manager.cache then
 		target_line = 1
 	end
 

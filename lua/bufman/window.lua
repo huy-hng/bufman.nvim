@@ -69,7 +69,7 @@ end
 local function select_item_cb(command)
 	local selected_line = vim.fn.line('.')
 	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 0 then --
-		list_manager.update_marks_list()
+		list_manager.update_cache()
 	end
 	M.close_menu()
 	navigator.nav_file(selected_line, command)
@@ -106,7 +106,7 @@ end
 
 local function set_buf_autocmds()
 	Augroup('Bufman', {
-		Autocmd('BufWriteCmd', nil, list_manager.update_marks_list, { buffer = M.bufnr }),
+		Autocmd('BufWriteCmd', nil, list_manager.update_cache, { buffer = M.bufnr }),
 		Autocmd('BufModifiedSet', nil, function()
 			-- update extmarks when line is moved
 			local lines = M.get_buffer_lines()
@@ -153,7 +153,7 @@ end
 
 function M.get_buffer_lines()
 	local function is_white_space(str) return str:gsub('%s', '') == '' end
-	list_manager.sort_marks()
+	-- list_manager.sort_marks()
 
 	local lines = vim.api.nvim_buf_get_lines(M.bufnr, 0, -1, true)
 	local items = {}
@@ -170,7 +170,7 @@ end
 function M.close_menu()
 	if M.win_id == nil or not vim.api.nvim_win_is_valid(M.win_id) then return end
 
-	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 2 then list_manager.update_marks_list() end
+	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 2 then list_manager.update_cache() end
 	vim.api.nvim_win_close(M.win_id, true)
 
 	M.win_id = nil
@@ -180,8 +180,8 @@ function M.close_menu()
 end
 
 function M.open_menu()
-	list_manager.window_marks = utils.deep_copy(list_manager.marks)
-	list_manager.synchronize_marks()
+	list_manager.window_buffers = utils.deep_copy(list_manager.cache)
+	list_manager.synchronize_cache()
 
 	local current_buf = vim.api.nvim_get_current_buf()
 

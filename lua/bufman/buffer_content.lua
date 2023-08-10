@@ -1,5 +1,6 @@
 local config = require('bufman.config').config
 local filename = require('bufman.filename')
+local extmark = require('bufman.extmark')
 local list_manager = require('bufman.list_manager')
 local grouper = require('bufman.grouper')
 
@@ -37,14 +38,14 @@ function M.update_extmarks(bufnr, lines)
 		local extra_opts = {}
 		local separator_line = { { vim.fn['repeat']('─', config.width) } }
 		if path_string ~= prev_path then
-			local virt_line = filename.get_extmark_path(path)
+			local virt_line = extmark.get_extmark_path(path)
 			table.insert(virt_line, 1, { '  ' })
 
 			extra_opts.virt_lines = { virt_line }
 			if prev_path then table.insert(extra_opts.virt_lines, 1, separator_line) end
 		end
 
-		local extmark = { filename.get_icon(file), unpack(filename.get_extmark_name(file)) }
+		local extmark = { filename.get_icon(file), unpack(extmark.get_extmark_name(file)) }
 		set_extmark(bufnr, i - 1, 0, extmark, extra_opts)
 		prev_path = path_string
 	end
@@ -57,7 +58,7 @@ function M.create_buffer_content(current_buf)
 	local contents = {}
 	local current_buf_line
 
-	for i, mark in ipairs(list_manager.marks) do
+	for i, mark in ipairs(list_manager.cache) do
 		if mark.bufnr == current_buf then current_buf_line = i end
 		table.insert(contents, mark.filename)
 	end
@@ -68,11 +69,11 @@ local function get_truncated_extmark(fname, folder_difference)
 	local path = {}
 	if folder_difference > 0 then
 		local path_folders = filename.get_path_folders(fname, folder_difference)
-		path = filename.get_extmark_path(path_folders, false)
+		path = extmark.get_extmark_path(path_folders, false)
 	end
 	local icon = filename.get_icon(fname)
 
-	local name = filename.get_extmark_name(fname)
+	local name = extmark.get_extmark_name(fname)
 	return table.add({ icon }, path, name)
 end
 
@@ -81,7 +82,7 @@ local function get_virt_line(path, add_separator)
 
 	local separator_line = { { vim.fn['repeat']('─', config.width) } }
 
-	local virt_line = filename.get_extmark_path(path)
+	local virt_line = extmark.get_extmark_path(path)
 	table.insert(virt_line, 1, { '  ' })
 	extra_opts.virt_lines = { virt_line }
 	if add_separator then table.insert(extra_opts.virt_lines, 1, separator_line) end

@@ -9,10 +9,10 @@ function M.setup(user_config)
 	local list_manger = require('bufman.list_manager')
 
 	Augroup('Bufman', {
-		Autocmd('SessionLoadPost', { list_manger.synchronize_marks, true }),
+		Autocmd('SessionLoadPost', { list_manger.synchronize_cache, true }),
 		Autocmd(
 			{ 'BufDelete', 'BufLeave', 'BufNew', 'BufEnter', 'BufRead' },
-			list_manger.synchronize_marks
+			list_manger.synchronize_cache
 		),
 	})
 end
