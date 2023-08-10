@@ -1,6 +1,7 @@
 local config = require('bufman.config').config
 local grouper = require('bufman.grouper')
 local Debounce = require('modules.debounce')
+local tab_scope = require('bufman.tab_scope')
 
 local M = {}
 
@@ -12,9 +13,9 @@ M.groups = {}
 M.window_marks = {}
 
 function M.sort_marks(sorting_fn)
-	M.update_marks_list()
+	-- M.update_marks_list()
 	if #M.marks < 2 then return end
-	table.sort(M.marks, config.sorting.functions[sorting_fn][1])
+	table.sort(M.marks, config.sorting.functions[sorting_fn or 'alphabet'][1])
 end
 
 local function remove_duplicates(list)

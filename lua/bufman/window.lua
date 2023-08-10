@@ -1,5 +1,6 @@
 local popup = require('plenary.popup')
 local utils = require('bufman.utils')
+local statuscolumn = require('bufman.statuscolumn')
 
 local buffer_content = require('bufman.buffer_content')
 local list_manager = require('bufman.list_manager')
@@ -50,6 +51,10 @@ local function create_window()
 	if config.highlight ~= '' then win_config['highlight'] = config.highlight end
 	local win_id, win = popup.create(bufnr, win_config)
 
+	if config.winblend then
+		vim.wo[win_id].winblend = config.winblend
+		vim.wo[win.border.win_id].winblend = config.winblend
+	end
 	if config.highlight ~= '' then
 		vim.api.nvim_win_set_option(
 			win.border.win_id,
@@ -80,10 +85,8 @@ local function set_buf_keybindings()
 
 	for name, sort in pairs(config.sorting.functions) do
 		nmap(sort.key, function()
-			-- M.update_marks_list()
 			list_manager.sort_marks(name)
 			set_buffer_content(nil, true)
-			-- M.update_marks_list()
 		end, 'Sort Marks by ' .. name)
 	end
 
@@ -92,11 +95,13 @@ local function set_buf_keybindings()
 	end
 
 	-- Go to file hitting its line number
-	local str = config.line_keys
-	for i = 1, #str do
-		local lhs = str:sub(i, i)
+	for i, lhs in ipairs(config.line_keys) do
 		nmap(lhs, { navigator.nav_file, i }, '')
 	end
+	-- for i = 1, #str do
+	-- 	local lhs = str:sub(i, i)
+	-- 	nmap(lhs, { navigator.nav_file, i }, '')
+	-- end
 end
 
 local function set_buf_autocmds()
@@ -148,6 +153,7 @@ end
 
 function M.get_buffer_lines()
 	local function is_white_space(str) return str:gsub('%s', '') == '' end
+	list_manager.sort_marks()
 
 	local lines = vim.api.nvim_buf_get_lines(M.bufnr, 0, -1, true)
 	local items = {}
@@ -157,7 +163,6 @@ function M.get_buffer_lines()
 			table.insert(items, line)
 		end
 	end
-	-- M.sort_marks('alphabet')
 
 	return items
 end
@@ -184,6 +189,7 @@ function M.open_menu()
 	M.win_id = win_info.win_id
 	M.bufnr = win_info.bufnr
 
+	statuscolumn.set()
 	set_buffer_content(current_buf)
 	set_options()
 	set_buf_keybindings()
