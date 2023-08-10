@@ -1,5 +1,5 @@
 local Path = require('plenary.path')
-local list_manager = require('plugins.ui.heirline.buffer_manager.list_manager')
+local list_manager = require('bufman.list_manager')
 
 local M = {}
 

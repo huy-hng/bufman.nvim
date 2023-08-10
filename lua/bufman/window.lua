@@ -1,10 +1,10 @@
 local popup = require('plenary.popup')
-local utils = require('plugins.ui.heirline.buffer_manager.utils')
+local utils = require('bufman.utils')
 
-local buffer_content = require('plugins.ui.heirline.buffer_manager.buffer_content')
-local list_manager = require('plugins.ui.heirline.buffer_manager.list_manager')
-local navigator = require('plugins.ui.heirline.buffer_manager.navigation')
-local config = require('plugins.ui.heirline.buffer_manager.config').config
+local buffer_content = require('bufman.buffer_content')
+local list_manager = require('bufman.list_manager')
+local navigator = require('bufman.navigation')
+local config = require('bufman.config').config
 
 -- local Object = require('nui.object')
 
@@ -40,7 +40,7 @@ local function create_window()
 	local bufnr = vim.api.nvim_create_buf(false, false)
 
 	local win_config = {
-		title = 'Buffer Manager',
+		title = 'Bufman',
 		line = math.floor(((vim.o.lines - height) / 2) - 1),
 		col = math.floor((vim.o.columns - width) / 2),
 		minwidth = width,
@@ -73,7 +73,7 @@ end
 
 local function set_buf_keybindings()
 	local opts = { buffer = M.bufnr }
-	local nmap = Map.create('n', '', '[Buffer Manager]', opts)
+	local nmap = Map.create('n', '', '[Bufman]', opts)
 
 	nmap('q', M.close_menu, 'Close Menu')
 	nmap('<ESC>', M.close_menu, 'Close Menu')
@@ -100,7 +100,7 @@ local function set_buf_keybindings()
 end
 
 local function set_buf_autocmds()
-	Augroup('BufferManager', {
+	Augroup('Bufman', {
 		Autocmd('BufWriteCmd', nil, list_manager.update_marks_list, { buffer = M.bufnr }),
 		Autocmd('BufModifiedSet', nil, function()
 			-- update extmarks when line is moved
@@ -136,12 +136,12 @@ local function set_options()
 		vim.api.nvim_win_set_option(M.win_id, 'cursorlineopt', 'both')
 	end
 
-	vim.api.nvim_buf_set_name(M.bufnr, 'Buffer Manager')
+	vim.api.nvim_buf_set_name(M.bufnr, 'Bufman')
 
 	vim.api.nvim_win_set_option(M.win_id, 'wrap', false)
 	vim.api.nvim_win_set_option(M.win_id, 'number', true)
 
-	vim.api.nvim_buf_set_option(M.bufnr, 'filetype', 'buffer_manager')
+	vim.api.nvim_buf_set_option(M.bufnr, 'filetype', 'bufman')
 	vim.api.nvim_buf_set_option(M.bufnr, 'buftype', 'acwrite')
 	vim.api.nvim_buf_set_option(M.bufnr, 'bufhidden', 'delete')
 end
@@ -191,7 +191,7 @@ function M.open_menu()
 	utils.hide_cursor()
 end
 
-function M.toggle_quick_menu()
+function M.toggle_menu()
 	if M.win_id ~= nil then
 		M.close_menu()
 		return

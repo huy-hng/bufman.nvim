@@ -1,11 +1,11 @@
-local config = require('plugins.ui.heirline.buffer_manager.config').config
-local filename = require('plugins.ui.heirline.buffer_manager.filename')
-local list_manager = require('plugins.ui.heirline.buffer_manager.list_manager')
-local grouper = require('plugins.ui.heirline.buffer_manager.grouper')
+local config = require('bufman.config').config
+local filename = require('bufman.filename')
+local list_manager = require('bufman.list_manager')
+local grouper = require('bufman.grouper')
 
 local M = {}
 
-local ns = vim.api.nvim_create_namespace('BufferManager')
+local ns = vim.api.nvim_create_namespace('Bufman')
 
 local function set_extmark(bufnr, row, col, content, extra_opts)
 	if not vim.api.nvim_buf_is_valid(bufnr) then return end

@@ -1,5 +1,5 @@
-local filename = require('plugins.ui.heirline.buffer_manager.filename')
-local utils = require('plugins.ui.heirline.buffer_manager.utils')
+local filename = require('bufman.filename')
+local utils = require('bufman.utils')
 
 local M = {}
 local MAX_DISPLAY_NAME_FOLDERS = 1

@@ -1,5 +1,5 @@
-local config = require('plugins.ui.heirline.buffer_manager.config').config
-local grouper = require('plugins.ui.heirline.buffer_manager.grouper')
+local config = require('bufman.config').config
+local grouper = require('bufman.grouper')
 local Debounce = require('modules.debounce')
 
 local M = {}
@@ -116,7 +116,7 @@ M.synchronize_marks = Debounce(vim.schedule_wrap(synchronize_marks), 20)
 
 -- sync marks list with window lines
 function M.update_marks_list()
-	local window = require('plugins.ui.heirline.buffer_manager.window')
+	local window = require('bufman.window')
 	M.marks = table.map(function(v)
 		if type(v) ~= 'string' then return end
 

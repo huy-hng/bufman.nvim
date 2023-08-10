@@ -1,5 +1,5 @@
-local utils = require('plugins.ui.heirline.buffer_manager.utils')
-local filename = require('plugins.ui.heirline.buffer_manager.filename')
+local utils = require('bufman.utils')
+local filename = require('bufman.filename')
 
 local M = {}
 M.config = {}

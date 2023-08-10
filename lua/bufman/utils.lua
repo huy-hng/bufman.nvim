@@ -45,7 +45,7 @@ function M.hide_cursor()
 	end
 	vim.schedule(function()
 		if M._guicursor then
-			vim.go.guicursor = "a:BufferManagerHiddenCursor"
+			vim.go.guicursor = "a:BufmanHiddenCursor"
 		end
 	end)
 end
