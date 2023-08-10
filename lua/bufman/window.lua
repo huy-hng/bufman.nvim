@@ -69,10 +69,10 @@ end
 local function select_item_cb(command)
 	local selected_line = vim.fn.line('.')
 	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 0 then --
-		list_manager.update_cache()
+		list_manager.update_buffer_list()
 	end
 	M.close_menu()
-	navigator.nav_file(selected_line, command)
+	navigator.set_current_buffer(selected_line, command)
 	list_manager.apply_buffer_changes()
 end
 
@@ -96,7 +96,7 @@ local function set_buf_keybindings()
 
 	-- Go to file hitting its line number
 	for i, lhs in ipairs(config.line_keys) do
-		nmap(lhs, { navigator.nav_file, i }, '')
+		nmap(lhs, { navigator.set_current_buffer, i }, '')
 	end
 	-- for i = 1, #str do
 	-- 	local lhs = str:sub(i, i)
@@ -106,7 +106,7 @@ end
 
 local function set_buf_autocmds()
 	Augroup('Bufman', {
-		Autocmd('BufWriteCmd', nil, list_manager.update_cache, { buffer = M.bufnr }),
+		Autocmd('BufWriteCmd', nil, list_manager.update_buffer_list, { buffer = M.bufnr }),
 		Autocmd('BufModifiedSet', nil, function()
 			-- update extmarks when line is moved
 			local lines = M.get_buffer_lines()
@@ -170,7 +170,7 @@ end
 function M.close_menu()
 	if M.win_id == nil or not vim.api.nvim_win_is_valid(M.win_id) then return end
 
-	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 2 then list_manager.update_cache() end
+	if vim.api.nvim_buf_get_changedtick(M.bufnr) > 2 then list_manager.update_buffer_list() end
 	vim.api.nvim_win_close(M.win_id, true)
 
 	M.win_id = nil
@@ -180,8 +180,8 @@ function M.close_menu()
 end
 
 function M.open_menu()
-	list_manager.window_buffers = utils.deep_copy(list_manager.cache)
-	list_manager.synchronize_cache()
+	list_manager.window_buffers = utils.deep_copy(list_manager.buffer_list)
+	list_manager.synchronize_buffer_list()
 
 	local current_buf = vim.api.nvim_get_current_buf()
 

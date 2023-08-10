@@ -2,20 +2,18 @@ local list_manager = require('bufman.list_manager')
 
 local M = {}
 
-function M.nav_file(id, command)
+function M.set_current_buffer(id, command)
 	if command == nil then command = 'edit' end
 
-	local mark = list_manager.cache[id]
-	if not mark then
-		return
-	else
-		vim.cmd(command .. ' ' .. mark.filename)
-	end
+	local buffer = list_manager.buffer_list[id]
+	if not buffer then return end
+
+	vim.api.nvim_set_current_buf(buffer.bufnr)
 end
 
 local function get_current_buf_line()
 	local current_buf_id = vim.fn.bufnr()
-	for idx, mark in pairs(list_manager.cache) do
+	for idx, mark in pairs(list_manager.buffer_list) do
 		if mark.bufnr == current_buf_id then return idx end
 	end
 	return -1
@@ -29,12 +27,12 @@ function M.goto(direction)
 
 	local target_line = current_line + direction
 	if target_line < 1 then
-		target_line = #list_manager.cache
-	elseif target_line > #list_manager.cache then
+		target_line = #list_manager.buffer_list
+	elseif target_line > #list_manager.buffer_list then
 		target_line = 1
 	end
 
-	M.nav_file(target_line)
+	M.set_current_buffer(target_line)
 end
 
 function M.location_window(options)

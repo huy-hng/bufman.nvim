@@ -1,18 +1,19 @@
-local config = require('bufman.config').config
 local Debounce = require('modules.debounce')
+
+local config = require('bufman.config').config
 
 local M = {}
 
----@alias cache_item { bufnr: number, filename: string, tab: number | number[] }
----@type cache_item[]
-M.cache = {}
+---@alias buffer_list { bufnr: number, filename: string }[]
+---@type buffer_list
+M.buffer_list = {}
 M.groups = {}
 M.window_buffers = {}
 
 function M.sort_marks(sorting_fn)
-	M.update_cache()
-	if #M.cache < 2 then return end
-	table.sort(M.cache, config.sorting.functions[sorting_fn or 'alphabet'][1])
+	M.update_buffer_list()
+	if #M.buffer_list < 2 then return end
+	table.sort(M.buffer_list, config.sorting.functions[sorting_fn or 'alphabet'][1])
 end
 
 local function remove_duplicates(list)
@@ -49,7 +50,7 @@ local function can_be_deleted(bufnr)
 end
 
 local function is_buffer_in_marks(bufnr)
-	for _, mark in ipairs(M.cache) do
+	for _, mark in ipairs(M.buffer_list) do
 		if mark.bufnr == bufnr then return true end
 	end
 end
@@ -63,13 +64,14 @@ local function delete_buffers()
 end
 
 local function add_buffers()
-	for i, mark in ipairs(M.cache) do
-		local bufnr = vim.fn.bufnr(mark.bufnr)
-		-- Add buffer only if it does not already exist
-		if bufnr == -1 then
-			vim.cmd('badd ' .. mark.filename)
+	for i, buffer in ipairs(M.buffer_list) do
+		local bufnr = vim.fn.bufnr(buffer.bufnr)
+
+		local does_buffer_exist = bufnr ~= -1
+		if not does_buffer_exist then
+			vim.cmd('badd ' .. buffer.filename)
 			---@diagnostic disable-next-line: param-type-mismatch
-			M.cache[i].bufnr = vim.fn.bufnr(mark.filename)
+			M.buffer_list[i].bufnr = vim.fn.bufnr(buffer.filename)
 		end
 	end
 end
@@ -81,21 +83,19 @@ function M.apply_buffer_changes()
 end
 
 -- sync marks with actual buffers
-local function synchronize_cache(initialize)
-	if initialize then M.cache = {} end
+local function synchronize_buffer_list(initialize)
+	if initialize then M.buffer_list = {} end
 
-	-- Check if any buffer has been deleted
-	-- If so, remove it from M.marks
-	for i, mark in ipairs(M.cache) do
+	for i, mark in ipairs(M.buffer_list) do
 		if not buffer_is_valid(mark.bufnr, mark.filename) then --
-			table.remove(M.cache, i)
+			table.remove(M.buffer_list, i)
 		end
 	end
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local filename = vim.api.nvim_buf_get_name(bufnr)
 		if buffer_is_valid(bufnr, filename) and not is_buffer_in_marks(bufnr) then
-			table.insert(M.cache, {
+			table.insert(M.buffer_list, {
 				filename = filename,
 				bufnr = bufnr,
 			})
@@ -103,18 +103,18 @@ local function synchronize_cache(initialize)
 	end
 end
 
-M.synchronize_cache = Debounce(vim.schedule_wrap(synchronize_cache), 20)
+M.synchronize_buffer_list = Debounce(vim.schedule_wrap(synchronize_buffer_list), 20)
 
 -- update cache with window lines
-function M.update_cache()
+function M.update_buffer_list()
 	local window = require('bufman.window')
-	M.cache = table.map(function(v)
+	M.buffer_list = table.map(function(v)
 		if type(v) ~= 'string' then return end
 
 		local filename = v
 		local bufnr = nil
 
-		local existing_mark = get_mark_by_name(filename, M.cache)
+		local existing_mark = get_mark_by_name(filename, M.buffer_list)
 		if existing_mark then
 			filename = existing_mark.filename
 			bufnr = existing_mark.bufnr
@@ -127,14 +127,14 @@ function M.update_cache()
 			bufnr = bufnr,
 		}
 	end, window.get_buffer_lines())
-	M.cache = remove_duplicates(M.cache)
+	M.buffer_list = remove_duplicates(M.buffer_list)
 end
 
 function M.get_ordered_bufids(should_remove_duplicates)
-	M.synchronize_cache()
-	local marks = M.cache
+	M.synchronize_buffer_list()
+	local marks = M.buffer_list
 	if Util.nil_or_true(should_remove_duplicates) then --
-		marks = remove_duplicates(M.cache)
+		marks = remove_duplicates(M.buffer_list)
 	end
 	return table.map(function(mark) return mark.bufnr end, marks)
 end

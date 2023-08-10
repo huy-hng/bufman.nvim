@@ -58,7 +58,7 @@ function M.create_buffer_content(current_buf)
 	local contents = {}
 	local current_buf_line
 
-	for i, mark in ipairs(list_manager.cache) do
+	for i, mark in ipairs(list_manager.buffer_list) do
 		if mark.bufnr == current_buf then current_buf_line = i end
 		table.insert(contents, mark.filename)
 	end
