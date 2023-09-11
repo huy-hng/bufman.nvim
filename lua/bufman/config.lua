@@ -40,15 +40,15 @@ M.default_config = {
 	},
 	height = 20,
 	width = 80,
-	winblend = nil,
+	winblend = vim.g.has_neovide and vim.o.winblend or nil,
 	focus_alternate_buffer = false,
 	short_file_names = false,
 	cursorline = true,
 	short_term_names = false,
-	highlight = 'Float',
+	-- highlight = 'Float',
 	-- borderchars = { '─', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
 	borderchars = { '─', '│', '─', '│', '╭', '╮', '╯', '╰' },
-	-- highlight = 'Normal',
+	highlight = 'Normal',
 	-- width = 0.5,
 	-- height = 0.5
 }

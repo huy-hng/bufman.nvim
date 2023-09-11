@@ -8,7 +8,7 @@ function M.set_current_buffer(id, command)
 	local buffer = list_manager.buffer_list[id]
 	if not buffer then return end
 
-	vim.api.nvim_set_current_buf(buffer.bufnr)
+	pcall(vim.api.nvim_set_current_buf, buffer.bufnr)
 end
 
 local function get_current_buf_line()

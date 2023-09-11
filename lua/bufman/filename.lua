@@ -20,7 +20,7 @@ function M.get_icon(filename, opts)
 	local devicons = nrequire('nvim-web-devicons')
 
 	if devicons then
-		local extension = vim.fn.fnamemodify(filename, ':e')
+		local extension = M.get_extension(filename)
 		local icon_fn = opts.hexcode and devicons.get_icon_color or devicons.get_icon
 
 		local f_icon, f_hl = icon_fn(filename, extension, { default = opts.default })
@@ -61,6 +61,10 @@ function M.get_filename(filename, remove_extension)
 	local mods = ':t'
 	if remove_extension then mods = mods .. ':r' end
 	return filename == '' and '[No Name]' or vim.fn.fnamemodify(filename, mods)
+end
+
+function M.get_extension(filename) --
+	return vim.fn.fnamemodify(filename, ':e')
 end
 
 ----------------------------------------------referenece--------------------------------------------

@@ -52,7 +52,7 @@ local function create_window()
 	local win_id, win = popup.create(bufnr, win_config)
 
 	if config.winblend then
-		vim.wo[win_id].winblend = config.winblend
+		vim.wo[win_id].winblend = 100
 		vim.wo[win.border.win_id].winblend = config.winblend
 	end
 	if config.highlight ~= '' then
@@ -78,29 +78,29 @@ end
 
 local function set_buf_keybindings()
 	local opts = { buffer = M.bufnr }
-	local nmap = Map.create('n', '', '[Bufman]', opts)
+	local map = Map.new('', '', '[Bufman]', opts)
 
-	nmap('q', M.close_menu, 'Close Menu')
-	nmap('<ESC>', M.close_menu, 'Close Menu')
+	map.n('q', M.close_menu, 'Close Menu')
+	map.n('<ESC>', M.close_menu, 'Close Menu')
 
 	for name, sort in pairs(config.sorting.functions) do
-		nmap(sort.key, function()
+		map.n(sort.key, function()
 			list_manager.sort_marks(name)
 			set_buffer_content(nil, true)
 		end, 'Sort Marks by ' .. name)
 	end
 
 	for command, key in pairs(config.select_menu_item_commands) do
-		nmap(key, { select_item_cb, command }, 'Go to buffer in line')
+		map.n(key, { select_item_cb, command }, 'Go to buffer in line')
 	end
 
 	-- Go to file hitting its line number
 	for i, lhs in ipairs(config.line_keys) do
-		nmap(lhs, { navigator.set_current_buffer, i }, '')
+		map.n(lhs, { navigator.set_current_buffer, i }, '')
 	end
 	-- for i = 1, #str do
 	-- 	local lhs = str:sub(i, i)
-	-- 	nmap(lhs, { navigator.nav_file, i }, '')
+	-- 	map.n(lhs, { navigator.nav_file, i }, '')
 	-- end
 end
 

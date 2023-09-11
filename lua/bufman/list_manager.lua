@@ -4,6 +4,8 @@ local config = require('bufman.config').config
 
 local M = {}
 
+-- NOTE: filename in buffer_list is probably needed since bufnr arent session independent
+-- when deleted (i think)
 ---@alias buffer_list { bufnr: number, filename: string }[]
 ---@type buffer_list
 M.buffer_list = {}
@@ -29,8 +31,8 @@ local function remove_duplicates(list)
 	return res
 end
 
-local function buffer_is_valid(buf_id, buf_name) --
-	return 1 == vim.fn.buflisted(buf_id) and buf_name ~= ''
+local function buffer_is_valid(bufnr, buf_name) --
+	return 1 == vim.fn.buflisted(bufnr) and buf_name ~= ''
 end
 
 local function get_mark_by_name(name, specific_marks)
@@ -93,10 +95,10 @@ local function synchronize_buffer_list(initialize)
 	end
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		local filename = vim.api.nvim_buf_get_name(bufnr)
-		if buffer_is_valid(bufnr, filename) and not is_buffer_in_marks(bufnr) then
+		local bufname = vim.api.nvim_buf_get_name(bufnr)
+		if buffer_is_valid(bufnr, bufname) and not is_buffer_in_marks(bufnr) then
 			table.insert(M.buffer_list, {
-				filename = filename,
+				filename = bufname,
 				bufnr = bufnr,
 			})
 		end
