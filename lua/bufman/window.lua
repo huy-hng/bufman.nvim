@@ -94,7 +94,7 @@ local function set_buf_keybindings()
 		map.n(key, { select_item_cb, command }, 'Go to buffer in line')
 	end
 
-	-- Go to file hitting its line number
+	-- Go to file by hitting its line number
 	for i, lhs in ipairs(config.line_keys) do
 		map.n(lhs, { navigator.set_current_buffer, i }, '')
 	end
@@ -153,7 +153,6 @@ end
 
 function M.get_buffer_lines()
 	local function is_white_space(str) return str:gsub('%s', '') == '' end
-	-- list_manager.sort_marks()
 
 	local lines = vim.api.nvim_buf_get_lines(M.bufnr, 0, -1, true)
 	local items = {}

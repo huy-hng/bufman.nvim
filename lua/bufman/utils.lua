@@ -40,29 +40,26 @@ end
 
 M._guicursor = nil
 function M.hide_cursor()
-	if M._guicursor == nil then
-		M._guicursor = vim.go.guicursor
-	end
+	if M._guicursor == nil then M._guicursor = vim.go.guicursor end
 	vim.schedule(function()
-		if M._guicursor then
-			vim.go.guicursor = "a:BufmanHiddenCursor"
-		end
+		if M._guicursor then vim.go.guicursor = 'a:BufmanHiddenCursor' end
 	end)
 end
 
 function M.show_cursor()
-	if not M._guicursor then
-		return
-	end
+	if not M._guicursor then return end
 	vim.schedule(function()
-		if not M._guicursor then
-			return
-		end
-		vim.go.guicursor = "a:"
+		if not M._guicursor then return end
+		vim.go.guicursor = 'a:'
 		vim.cmd.redrawstatus()
 		vim.go.guicursor = M._guicursor
 		M._guicursor = nil
 	end)
+end
+
+function M.is_valid_buffer(bufnr, buf_name)
+	local exists = vim.api.nvim_buf_is_valid(bufnr)
+	return 1 == vim.fn.buflisted(bufnr) and exists and buf_name ~= ''
 end
 
 return M

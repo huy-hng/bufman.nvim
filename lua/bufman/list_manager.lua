@@ -1,15 +1,16 @@
 local Debounce = require('modules.debounce')
 
 local config = require('bufman.config').config
+local utils = require('bufman.utils')
 
 local M = {}
 
--- NOTE: filename in buffer_list is probably needed since bufnr arent session independent
+-- NOTE: filename in buffer_list is probably needed since bufnr is session dependent
 -- when deleted (i think)
+
 ---@alias buffer_list { bufnr: number, filename: string }[]
 ---@type buffer_list
 M.buffer_list = {}
-M.groups = {}
 M.window_buffers = {}
 
 function M.sort_marks(sorting_fn)
@@ -31,17 +32,13 @@ local function remove_duplicates(list)
 	return res
 end
 
-local function buffer_is_valid(bufnr, buf_name) --
-	return 1 == vim.fn.buflisted(bufnr) and buf_name ~= ''
-end
-
 local function get_mark_by_name(name, specific_marks)
 	for _, mark in ipairs(specific_marks) do
 		if name == mark.filename then return mark end
 	end
 end
 
-local function can_be_deleted(bufnr)
+local function is_deletable(bufnr)
 	local buftype = vim.bo[bufnr].buftype
 	return (
 		vim.api.nvim_buf_is_valid(bufnr)
@@ -51,61 +48,56 @@ local function can_be_deleted(bufnr)
 	)
 end
 
-local function is_buffer_in_marks(bufnr)
+local function is_buffer_in_marks(bufname)
 	for _, mark in ipairs(M.buffer_list) do
-		if mark.bufnr == bufnr then return true end
+		if mark.filename == bufname then return true end
 	end
 end
 
-local function delete_buffers()
-	for _, mark in ipairs(M.window_buffers) do
-		if not is_buffer_in_marks(mark.bufnr) and can_be_deleted(mark.bufnr) then
-			vim.cmd.Bdelete(mark.bufnr)
-		end
-	end
-end
-
-local function add_buffers()
+function M.add_buffers()
 	for i, buffer in ipairs(M.buffer_list) do
 		local bufnr = vim.fn.bufnr(buffer.bufnr)
 
 		local does_buffer_exist = bufnr ~= -1
-		if not does_buffer_exist then
-			vim.cmd('badd ' .. buffer.filename)
-			---@diagnostic disable-next-line: param-type-mismatch
-			M.buffer_list[i].bufnr = vim.fn.bufnr(buffer.filename)
+		if not does_buffer_exist then --
+			M.buffer_list[i].bufnr = vim.fn.bufadd(buffer.filename)
 		end
 	end
 end
 
 -- apply changes that have been made inside the buffer manager window
 function M.apply_buffer_changes()
-	delete_buffers()
-	-- add_buffers()
+	-- delete buffers
+	for _, mark in ipairs(M.window_buffers) do
+		if not is_buffer_in_marks(mark.filename) and is_deletable(mark.bufnr) then
+			vim.cmd.Bdelete(mark.bufnr)
+		end
+	end
+
+	-- add buffers
+	-- M.add_buffers()
 end
 
 -- sync marks with actual buffers
-local function synchronize_buffer_list(initialize)
+local function sync_buffer_list(initialize)
 	if initialize then M.buffer_list = {} end
 
 	for i, mark in ipairs(M.buffer_list) do
-		if not buffer_is_valid(mark.bufnr, mark.filename) then --
+		if not utils.is_valid_buffer(mark.bufnr, mark.filename) then --
 			table.remove(M.buffer_list, i)
 		end
 	end
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local bufname = vim.api.nvim_buf_get_name(bufnr)
-		if buffer_is_valid(bufnr, bufname) and not is_buffer_in_marks(bufnr) then
-			table.insert(M.buffer_list, {
-				filename = bufname,
-				bufnr = bufnr,
-			})
+
+		if utils.is_valid_buffer(bufnr, bufname) and not is_buffer_in_marks(bufname) then
+			table.insert(M.buffer_list, { filename = bufname, bufnr = bufnr })
 		end
 	end
-end
 
-M.synchronize_buffer_list = Debounce(vim.schedule_wrap(synchronize_buffer_list), 20)
+	M.buffer_list = remove_duplicates(M.buffer_list)
+end
 
 -- update cache with window lines
 function M.update_buffer_list()
@@ -140,5 +132,7 @@ function M.get_ordered_bufids(should_remove_duplicates)
 	end
 	return table.map(function(mark) return mark.bufnr end, marks)
 end
+
+M.synchronize_buffer_list = Debounce(vim.schedule_wrap(sync_buffer_list), 100)
 
 return M

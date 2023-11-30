@@ -45,8 +45,8 @@ function M.update_extmarks(bufnr, lines)
 			if prev_path then table.insert(extra_opts.virt_lines, 1, separator_line) end
 		end
 
-		local extmark = { filename.get_icon(file), unpack(extmark.get_extmark_name(file)) }
-		set_extmark(bufnr, i - 1, 0, extmark, extra_opts)
+		local mark = { filename.get_icon(file), unpack(extmark.get_extmark_name(file)) }
+		set_extmark(bufnr, i - 1, 0, mark, extra_opts)
 		prev_path = path_string
 	end
 end
