@@ -79,7 +79,7 @@ function M.apply_buffer_changes()
 end
 
 -- sync marks with actual buffers
-local function sync_buffer_list(initialize)
+function M.sync_buffer_list(initialize)
 	if initialize then M.buffer_list = {} end
 
 	for i, mark in ipairs(M.buffer_list) do
@@ -125,7 +125,7 @@ function M.update_buffer_list()
 end
 
 function M.get_ordered_bufids(should_remove_duplicates)
-	M.synchronize_buffer_list()
+	M.sync_buffer_list()
 	local marks = M.buffer_list
 	if Util.nil_or_true(should_remove_duplicates) then --
 		marks = remove_duplicates(M.buffer_list)
@@ -133,6 +133,6 @@ function M.get_ordered_bufids(should_remove_duplicates)
 	return table.map(function(mark) return mark.bufnr end, marks)
 end
 
-M.synchronize_buffer_list = Debounce(vim.schedule_wrap(sync_buffer_list), 100)
+M.synchronize_buffer_list = Debounce(vim.schedule_wrap(M.sync_buffer_list), 100)
 
 return M
