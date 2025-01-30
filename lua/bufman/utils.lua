@@ -23,9 +23,10 @@ function M.merge_tables(...)
 	return out
 end
 
-function M.is_valid_buffer(bufnr, buf_name)
+function M.is_valid_buffer(bufnr)
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
 	local exists = vim.api.nvim_buf_is_valid(bufnr)
-	return 1 == vim.fn.buflisted(bufnr) and exists and buf_name ~= ''
+	return 1 == vim.fn.buflisted(bufnr) and exists and bufname ~= ''
 end
 
 return M

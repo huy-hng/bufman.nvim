@@ -17,6 +17,8 @@ M.default_config = {
 	width = 80,
 	height = 20,
 
+	buffer_delete_cmd = 'bdelete',
+
 	-- transparency
 	winblend = 0,
 	cursorline = true,

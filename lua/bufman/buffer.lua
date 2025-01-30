@@ -6,55 +6,84 @@ local M = {
 	buffer_list = {},
 }
 
-local function remove_buffers()
-	for i, mark in ipairs(M.buffer_list) do
-		if not utils.is_valid_buffer(mark.bufnr, mark.filename) then --
-			table.remove(M.buffer_list, i)
+local function remove_buffers(buffer_list)
+	local function is_buffer_deleted(bufnr)
+		for _, real_bufnr in ipairs(vim.api.nvim_list_bufs()) do
+			if real_bufnr == bufnr then return false end
+		end
+		return true
+	end
+
+	for i, bufnr in ipairs(buffer_list) do
+		if not utils.is_valid_buffer(bufnr) or is_buffer_deleted(bufnr) then
+			table.remove(buffer_list, i)
 		end
 	end
 end
 
 local function add_buffers()
-	local function is_buffer_in_marks(bufname)
-		for _, mark in ipairs(M.buffer_list) do
-			if mark.filename == bufname then return true end
+	local function is_buffer_in_list(real_bufnr)
+		for _, bufnr in ipairs(M.buffer_list) do
+			if bufnr == real_bufnr then return true end
 		end
 	end
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-		if utils.is_valid_buffer(bufnr, bufname) and not is_buffer_in_marks(bufname) then
+		if utils.is_valid_buffer(bufnr) and not is_buffer_in_list(bufnr) then
 			-- TODO: if sorting / grouping is enabled then this should be more complex
-			table.insert(M.buffer_list, { filename = bufname, bufnr = bufnr })
+			table.insert(M.buffer_list, bufnr)
 		end
 	end
 end
 
+-- change `buffer_list` according to real buffers (on open)
 function M.update_buffer_list()
-	remove_buffers()
+	remove_buffers(M.buffer_list)
 	add_buffers()
 end
 
-function M.get_buffer_list(current_buf)
-	local conf = config.get_config()
-	current_buf = conf.focus_alternate_buffer and vim.fn.bufnr('#') or current_buf
+local function get_buffer_lines(bufman_bufnr)
+	local function is_white_space(str) return str:gsub('%s', '') == '' end
 
-	local contents = {}
-	local current_buf_line
+	local lines = vim.api.nvim_buf_get_lines(bufman_bufnr, 0, -1, true)
+	local items = {}
 
-	for i, buffer in ipairs(M.buffer_list) do
-		if buffer.bufnr == current_buf then current_buf_line = i end
-		table.insert(contents, buffer.filename)
+	for _, line in ipairs(lines) do
+		if not is_white_space(line) then --
+			table.insert(items, line)
+		end
 	end
-	return contents, current_buf_line
+
+	return items
 end
 
-M.update_buffer_list()
+local function delete_buffers(buffer_list)
+	local function is_buffer_in_buffer_list(real_bufnr)
+		for i, bufnr in ipairs(buffer_list) do
+			if bufnr == real_bufnr then return true end
+		end
+	end
+	local delete_cmd = config.get_config().buffer_delete_cmd
 
--- P(M.buffer_list)
-local sorter = require('bufman.sorter')
-sorter.sort('path', M.buffer_list)
--- P(M.buffer_list)
+	for _, real_bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		if not utils.is_valid_buffer(real_bufnr) or not is_buffer_in_buffer_list(real_bufnr) then
+			-- TODO: this should be a delete function that is configurable
+			-- vim.cmd.bdelete(real_bufnr)
+			-- vim.cmd[delete_cmd](real_bufnr)
+		end
+	end
+end
+
+-- change `buffer_list` according to changes in the bufman window (on close)
+function M.sync_buffer_list()
+	local buffer_lines = get_buffer_lines(require('bufman.window').bufnr)
+
+	M.buffer_list = vim.tbl_map(
+		function(bufnr_string) return tonumber(bufnr_string) end,
+		buffer_lines
+	)
+
+	delete_buffers(M.buffer_list)
+end
 
 return M
