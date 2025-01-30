@@ -28,24 +28,24 @@ local function set_buf_lines(bufnr, contents)
 	allow_undo(undolevels)
 end
 
-local function set_options(bufnr, win_id)
-	if config.cursorline then
-		vim.api.nvim_set_option_value('cursorline', true, { win = win_id })
-		vim.api.nvim_set_option_value('cursorlineopt', 'both', { win = win_id })
+local function create_window(config)
+	local function set_options(bufnr, win_id)
+		if config.cursorline then
+			vim.api.nvim_set_option_value('cursorline', true, { win = win_id })
+			vim.api.nvim_set_option_value('cursorlineopt', 'both', { win = win_id })
+		end
+
+		vim.api.nvim_buf_set_name(bufnr, 'Bufman')
+
+		vim.api.nvim_set_option_value('wrap', false, { win = win_id })
+		vim.api.nvim_set_option_value('number', true, { win = win_id })
+
+		vim.api.nvim_set_option_value('filetype', 'bufman', { buf = bufnr })
+		vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = bufnr })
+		-- vim.api.nvim_set_option_value('buftype', 'nowrite', { buf = bufnr })
+		vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = bufnr })
 	end
 
-	vim.api.nvim_buf_set_name(bufnr, 'Bufman')
-
-	vim.api.nvim_set_option_value('wrap', false, { win = win_id })
-	vim.api.nvim_set_option_value('number', true, { win = win_id })
-
-	vim.api.nvim_set_option_value('filetype', 'bufman', { buf = bufnr })
-	vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = bufnr })
-	-- vim.api.nvim_set_option_value('buftype', 'nowrite', { buf = bufnr })
-	vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = bufnr })
-end
-
-local function create_window(config)
 	local width = config.width
 	local height = config.height
 
@@ -93,10 +93,25 @@ function M.close_menu()
 end
 
 function M.open_menu(user_config)
-	buffer.update_buffer_list(buffer.buffer_list)
+	local function set_buffer_content(bufnr)
+		local current_buf = vim.api.nvim_get_current_buf()
+		local buffer_list_string = vim.tbl_map(
+			function(buf) return tostring(buf) end,
+			buffer.buffer_list
+		)
+		set_buf_lines(bufnr, buffer_list_string)
 
-	-- get current buffer
-	local current_buf = vim.api.nvim_get_current_buf()
+		local current_buf_line
+		-- set_extmarks
+		for i, bufnr in pairs(buffer.buffer_list) do
+			-- P(buffer.buffer_list, bufnr, vim.api.nvim_buf_get_name(bufnr))
+			if utils.is_valid_buffer(bufnr) and bufnr == current_buf then current_buf_line = i end
+			extmark.set_extmark(M.bufnr, i - 1, { { vim.api.nvim_buf_get_name(bufnr) } })
+		end
+		return current_buf_line
+	end
+
+	buffer.update_buffer_list(buffer.buffer_list)
 
 	local merged_config = vim.tbl_deep_extend('force', config.get_config(), user_config or {})
 	local win_info = create_window(merged_config)
@@ -105,22 +120,7 @@ function M.open_menu(user_config)
 	M.bufnr = win_info.bufnr
 	require('bufman.keymaps').set_keymaps()
 
-	-- set buffer_content
-	local buffer_list_string = vim.tbl_map(
-		function(buf) return tostring(buf) end,
-		buffer.buffer_list
-	)
-	set_buf_lines(M.bufnr, buffer_list_string)
-
-	-- set_options(M.bufnr, M.win_id)
-
-	local current_buf_line
-	-- set_extmarks
-	for i, bufnr in pairs(buffer.buffer_list) do
-		-- P(buffer.buffer_list, bufnr, vim.api.nvim_buf_get_name(bufnr))
-		if utils.is_valid_buffer(bufnr) and bufnr == current_buf then current_buf_line = i end
-		extmark.set_extmark(M.bufnr, i - 1, { { vim.api.nvim_buf_get_name(bufnr) } })
-	end
+	local current_buf_line = set_buffer_content(M.bufnr)
 
 	-- set cursor to current buffer
 	if current_buf_line then vim.fn.cursor { current_buf_line, 1 } end
