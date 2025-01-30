@@ -10,25 +10,6 @@ local M = {
 	bufnr = nil,
 }
 
-local function set_buf_lines(bufnr, contents)
-	local function get_undolevels()
-		return vim.api.nvim_get_option_value('undolevels', { buf = bufnr })
-	end
-
-	local function disallow_undo() vim.api.nvim_set_option_value('undolevels', -1, { buf = bufnr }) end
-
-	local function allow_undo(undolevels)
-		vim.api.nvim_set_option_value('undolevels', undolevels, { buf = bufnr })
-	end
-
-	local undolevels = get_undolevels()
-	disallow_undo()
-
-	vim.api.nvim_buf_set_lines(bufnr, 0, #contents, false, contents)
-
-	allow_undo(undolevels)
-end
-
 local function create_window(config)
 	local function set_options(bufnr, win_id)
 		if config.cursorline then
@@ -83,14 +64,46 @@ local function create_window(config)
 	return { bufnr = bufnr, win_id = win_id }
 end
 
-function M.close_menu()
-	if M.win_id == nil or not vim.api.nvim_win_is_valid(M.win_id) then return end
+local function set_buf_lines(bufnr, buffer_list)
+	local function get_undolevels()
+		return vim.api.nvim_get_option_value('undolevels', { buf = bufnr })
+	end
 
-	buffer.sync_buffer_list()
-	vim.api.nvim_win_close(M.win_id, true)
+	local function disallow_undo() vim.api.nvim_set_option_value('undolevels', -1, { buf = bufnr }) end
 
-	M.win_id = nil
-	M.bufnr = nil
+	local function allow_undo(undolevels)
+		vim.api.nvim_set_option_value('undolevels', undolevels, { buf = bufnr })
+	end
+
+	local undolevels = get_undolevels()
+	disallow_undo()
+
+	local buffer_list_string = vim.tbl_map(
+		function(buf) return tostring(buf) end,
+		buffer_list
+	)
+	vim.api.nvim_buf_set_lines(bufnr, 0, #buffer_list_string, false, buffer_list_string)
+
+	allow_undo(undolevels)
+end
+
+local function set_cursor_to_buffer(current_buf)
+	local current_buf_line
+	for i, bufnr in pairs(buffer.buffer_list) do
+		if bufnr == current_buf then
+			current_buf_line = i end
+	end
+	-- set cursor to current buffer
+	if current_buf_line then vim.fn.cursor { current_buf_line, 1 } end
+end
+
+local function set_buffer_content(bufman_bufnr, buffer_list)
+	for i, bufnr in pairs(buffer_list) do
+		local bufname = vim.api.nvim_buf_get_name(bufnr)
+		local fname = filename.get_filename(bufname)
+		extmark.set_extmark(bufman_bufnr, i - 1, { { tostring(bufnr) .. ' ' }, { fname } })
+	end
+
 end
 
 function M.open_menu(user_config)
@@ -105,23 +118,19 @@ function M.open_menu(user_config)
 	M.bufnr = win_info.bufnr
 	require('bufman.keymaps').set_keymaps()
 
-	local buffer_list_string = vim.tbl_map(
-		function(buf) return tostring(buf) end,
-		buffer.buffer_list
-	)
-	set_buf_lines(M.bufnr, buffer_list_string)
+	set_buf_lines(M.bufnr, buffer.buffer_list)
+	set_cursor_to_buffer(current_buf)
+	set_buffer_content(M.bufnr, buffer.buffer_list)
+end
 
+function M.close_menu()
+	if M.win_id == nil or not vim.api.nvim_win_is_valid(M.win_id) then return end
 
-	local current_buf_line
-	for i, bufnr in pairs(buffer.buffer_list) do
-		if utils.is_valid_buffer(bufnr) and bufnr == current_buf then --
-			current_buf_line = i
-		end
-	end
-	-- set cursor to current buffer
-	if current_buf_line then vim.fn.cursor { current_buf_line, 1 } end
+	buffer.sync_buffer_list()
+	vim.api.nvim_win_close(M.win_id, true)
 
-	extmark.set_extmarks(M.bufnr, buffer.buffer_list)
+	M.win_id = nil
+	M.bufnr = nil
 end
 
 function M.toggle_menu(user_config)

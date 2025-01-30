@@ -23,7 +23,7 @@ function M.set_extmark(bufnr, row, content, extra_opts)
 	vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, mark_opts)
 end
 
-function M.set_extmarks(bufman_bufnr, buffer_list)
+function M.set_filenames(bufman_bufnr, buffer_list)
 	for i, bufnr in pairs(buffer_list) do
 		local bufname = vim.api.nvim_buf_get_name(bufnr)
 		local fname = filename.get_filename(bufname)
