@@ -6,10 +6,13 @@ local function get_extension(filename) --
 	return vim.fn.fnamemodify(filename, ':e')
 end
 
+function M.test(item)
+	return Path:new(item):shorten()
+end
+
 function M.normalize_path(item)
 	if string.find(item, '.*:///.*') ~= nil then return item end
 	return Path:new(item):normalize()
-	-- return Path:new(Path:new(item):absolute()):make_relative(vim.loop.cwd())
 end
 
 function M.get_icon(filename, opts)
@@ -35,5 +38,10 @@ function M.get_icon(filename, opts)
 	end
 	return { icon, hl }
 end
+
+function M.get_filename(item)
+	return M.normalize_path(item)
+end
+
 
 return M

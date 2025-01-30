@@ -30,7 +30,6 @@ local function add_buffers()
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		if utils.is_valid_buffer(bufnr) and not is_buffer_in_list(bufnr) then
-			P(bufnr)
 			-- TODO: if sorting / grouping is enabled then this should be more complex
 			table.insert(M.buffer_list, bufnr)
 		end

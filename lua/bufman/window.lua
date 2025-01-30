@@ -3,6 +3,7 @@ local config = require('bufman.config')
 local buffer = require('bufman.buffer')
 local extmark = require('bufman.extmark')
 local utils = require('bufman.utils')
+local filename = require('bufman.filename')
 
 local M = {
 	win_id = nil,
@@ -93,23 +94,7 @@ function M.close_menu()
 end
 
 function M.open_menu(user_config)
-	local function set_buffer_content(bufnr)
-		local current_buf = vim.api.nvim_get_current_buf()
-		local buffer_list_string = vim.tbl_map(
-			function(buf) return tostring(buf) end,
-			buffer.buffer_list
-		)
-		set_buf_lines(bufnr, buffer_list_string)
-
-		local current_buf_line
-		-- set_extmarks
-		for i, bufnr in pairs(buffer.buffer_list) do
-			-- P(buffer.buffer_list, bufnr, vim.api.nvim_buf_get_name(bufnr))
-			if utils.is_valid_buffer(bufnr) and bufnr == current_buf then current_buf_line = i end
-			extmark.set_extmark(M.bufnr, i - 1, { { vim.api.nvim_buf_get_name(bufnr) } })
-		end
-		return current_buf_line
-	end
+	local current_buf = vim.api.nvim_get_current_buf()
 
 	buffer.update_buffer_list(buffer.buffer_list)
 
@@ -120,10 +105,23 @@ function M.open_menu(user_config)
 	M.bufnr = win_info.bufnr
 	require('bufman.keymaps').set_keymaps()
 
-	local current_buf_line = set_buffer_content(M.bufnr)
+	local buffer_list_string = vim.tbl_map(
+		function(buf) return tostring(buf) end,
+		buffer.buffer_list
+	)
+	set_buf_lines(M.bufnr, buffer_list_string)
 
+
+	local current_buf_line
+	for i, bufnr in pairs(buffer.buffer_list) do
+		if utils.is_valid_buffer(bufnr) and bufnr == current_buf then --
+			current_buf_line = i
+		end
+	end
 	-- set cursor to current buffer
 	if current_buf_line then vim.fn.cursor { current_buf_line, 1 } end
+
+	extmark.set_extmarks(M.bufnr, buffer.buffer_list)
 end
 
 function M.toggle_menu(user_config)
