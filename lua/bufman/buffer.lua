@@ -30,6 +30,7 @@ local function add_buffers()
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		if utils.is_valid_buffer(bufnr) and not is_buffer_in_list(bufnr) then
+			P(bufnr)
 			-- TODO: if sorting / grouping is enabled then this should be more complex
 			table.insert(M.buffer_list, bufnr)
 		end
@@ -37,8 +38,8 @@ local function add_buffers()
 end
 
 -- change `buffer_list` according to real buffers (on open)
-function M.update_buffer_list()
-	remove_buffers(M.buffer_list)
+function M.update_buffer_list(buffer_list)
+	remove_buffers(buffer_list)
 	add_buffers()
 end
 
@@ -66,18 +67,12 @@ local function delete_buffers(buffer_list)
 	local delete_cmd = config.get_config().buffer_delete_cmd
 
 	for _, real_bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		local bufname = vim.api.nvim_buf_get_name(real_bufnr)
-		local is_bufman_buffer = string.find(bufname, 'Bufman')
-		if is_bufman_buffer then return true end
-
 		if
-			not is_bufman_buffer
-			and not utils.is_valid_buffer(real_bufnr)
-			or not is_buffer_in_buffer_list(real_bufnr)
+			not utils.is_bufman_buffer(real_bufnr)
+			and (not utils.is_valid_buffer(real_bufnr)
+			or not is_buffer_in_buffer_list(real_bufnr))
 		then
-			-- TODO: this should be a delete function that is configurable
-			vim.cmd.bdelete(real_bufnr)
-			-- vim.cmd[delete_cmd](real_bufnr)
+			pcall(vim.cmd[delete_cmd], real_bufnr)
 		end
 	end
 end
@@ -91,7 +86,7 @@ function M.sync_buffer_list()
 		buffer_lines
 	)
 
-	-- delete_buffers(M.buffer_list)
+	delete_buffers(M.buffer_list)
 end
 
 return M

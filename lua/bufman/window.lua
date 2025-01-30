@@ -2,29 +2,28 @@ local popup = require('plenary.popup')
 local config = require('bufman.config')
 local buffer = require('bufman.buffer')
 local extmark = require('bufman.extmark')
+local utils = require('bufman.utils')
 
 local M = {
 	win_id = nil,
 	bufnr = nil,
 }
 
-local function set_buf_lines(contents)
+local function set_buf_lines(bufnr, contents)
 	local function get_undolevels()
-		return vim.api.nvim_get_option_value('undolevels', { buf = M.bufnr })
+		return vim.api.nvim_get_option_value('undolevels', { buf = bufnr })
 	end
 
-	local function disallow_undo()
-		vim.api.nvim_set_option_value('undolevels', -1, { buf = M.bufnr })
-	end
+	local function disallow_undo() vim.api.nvim_set_option_value('undolevels', -1, { buf = bufnr }) end
 
 	local function allow_undo(undolevels)
-		vim.api.nvim_set_option_value('undolevels', undolevels, { buf = M.bufnr })
+		vim.api.nvim_set_option_value('undolevels', undolevels, { buf = bufnr })
 	end
 
 	local undolevels = get_undolevels()
 	disallow_undo()
 
-	vim.api.nvim_buf_set_lines(M.bufnr, 0, #contents, false, contents)
+	vim.api.nvim_buf_set_lines(bufnr, 0, #contents, false, contents)
 
 	allow_undo(undolevels)
 end
@@ -94,7 +93,7 @@ function M.close_menu()
 end
 
 function M.open_menu(user_config)
-	buffer.update_buffer_list()
+	buffer.update_buffer_list(buffer.buffer_list)
 
 	-- get current buffer
 	local current_buf = vim.api.nvim_get_current_buf()
@@ -105,23 +104,21 @@ function M.open_menu(user_config)
 	M.win_id = win_info.win_id
 	M.bufnr = win_info.bufnr
 	require('bufman.keymaps').set_keymaps()
-	P(M.bufnr)
-
-	-- buffer.update_buffer_list(M.bufnr)
 
 	-- set buffer_content
 	local buffer_list_string = vim.tbl_map(
 		function(buf) return tostring(buf) end,
 		buffer.buffer_list
 	)
-	set_buf_lines(buffer_list_string)
+	set_buf_lines(M.bufnr, buffer_list_string)
 
 	-- set_options(M.bufnr, M.win_id)
 
 	local current_buf_line
 	-- set_extmarks
 	for i, bufnr in pairs(buffer.buffer_list) do
-		if bufnr == current_buf then current_buf_line = i end
+		-- P(buffer.buffer_list, bufnr, vim.api.nvim_buf_get_name(bufnr))
+		if utils.is_valid_buffer(bufnr) and bufnr == current_buf then current_buf_line = i end
 		extmark.set_extmark(M.bufnr, i - 1, { { vim.api.nvim_buf_get_name(bufnr) } })
 	end
 

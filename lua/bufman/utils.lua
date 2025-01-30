@@ -23,13 +23,18 @@ function M.merge_tables(...)
 	return out
 end
 
+function M.is_bufman_buffer(bufnr)
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+	return string.find(bufname, 'Bufman')
+end
+
+
 function M.is_valid_buffer(bufnr)
 	local bufname = vim.api.nvim_buf_get_name(bufnr)
 	local does_exist = vim.api.nvim_buf_is_valid(bufnr)
 	local is_listed = 1 == vim.fn.buflisted(bufnr)
 
-	local is_bufman_buffer = string.find(bufname, 'Bufman')
-	if is_bufman_buffer then return true end
+	if M.is_bufman_buffer(bufnr) then return false end
 
 	return is_listed and does_exist and bufname ~= ''
 end
