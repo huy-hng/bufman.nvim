@@ -29,23 +29,24 @@ local function set_buf_lines(contents)
 	allow_undo(undolevels)
 end
 
-local function create_window(config)
-	local function set_options(bufnr, win_id)
-		if config.cursorline then
-			vim.api.nvim_set_option_value('cursorline', true, { win = win_id })
-			vim.api.nvim_set_option_value('cursorlineopt', 'both', { win = win_id })
-		end
-
-		vim.api.nvim_buf_set_name(bufnr, 'Bufman')
-
-		vim.api.nvim_set_option_value('wrap', false, { win = win_id })
-		vim.api.nvim_set_option_value('number', true, { win = win_id })
-
-		vim.api.nvim_set_option_value('filetype', 'bufman', { buf = bufnr })
-		vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = bufnr })
-		vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = bufnr })
+local function set_options(bufnr, win_id)
+	if config.cursorline then
+		vim.api.nvim_set_option_value('cursorline', true, { win = win_id })
+		vim.api.nvim_set_option_value('cursorlineopt', 'both', { win = win_id })
 	end
 
+	vim.api.nvim_buf_set_name(bufnr, 'Bufman')
+
+	vim.api.nvim_set_option_value('wrap', false, { win = win_id })
+	vim.api.nvim_set_option_value('number', true, { win = win_id })
+
+	vim.api.nvim_set_option_value('filetype', 'bufman', { buf = bufnr })
+	vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = bufnr })
+	-- vim.api.nvim_set_option_value('buftype', 'nowrite', { buf = bufnr })
+	vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = bufnr })
+end
+
+local function create_window(config)
 	local width = config.width
 	local height = config.height
 
@@ -104,12 +105,18 @@ function M.open_menu(user_config)
 	M.win_id = win_info.win_id
 	M.bufnr = win_info.bufnr
 	require('bufman.keymaps').set_keymaps()
+	P(M.bufnr)
 
 	-- buffer.update_buffer_list(M.bufnr)
 
 	-- set buffer_content
-	local buffer_list_string = vim.tbl_map(function(buf) return tostring(buf) end, buffer.buffer_list)
+	local buffer_list_string = vim.tbl_map(
+		function(buf) return tostring(buf) end,
+		buffer.buffer_list
+	)
 	set_buf_lines(buffer_list_string)
+
+	-- set_options(M.bufnr, M.win_id)
 
 	local current_buf_line
 	-- set_extmarks

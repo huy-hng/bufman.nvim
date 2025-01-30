@@ -25,8 +25,13 @@ end
 
 function M.is_valid_buffer(bufnr)
 	local bufname = vim.api.nvim_buf_get_name(bufnr)
-	local exists = vim.api.nvim_buf_is_valid(bufnr)
-	return 1 == vim.fn.buflisted(bufnr) and exists and bufname ~= ''
+	local does_exist = vim.api.nvim_buf_is_valid(bufnr)
+	local is_listed = 1 == vim.fn.buflisted(bufnr)
+
+	local is_bufman_buffer = string.find(bufname, 'Bufman')
+	if is_bufman_buffer then return true end
+
+	return is_listed and does_exist and bufname ~= ''
 end
 
 return M

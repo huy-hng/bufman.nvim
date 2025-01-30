@@ -66,9 +66,17 @@ local function delete_buffers(buffer_list)
 	local delete_cmd = config.get_config().buffer_delete_cmd
 
 	for _, real_bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		if not utils.is_valid_buffer(real_bufnr) or not is_buffer_in_buffer_list(real_bufnr) then
+		local bufname = vim.api.nvim_buf_get_name(real_bufnr)
+		local is_bufman_buffer = string.find(bufname, 'Bufman')
+		if is_bufman_buffer then return true end
+
+		if
+			not is_bufman_buffer
+			and not utils.is_valid_buffer(real_bufnr)
+			or not is_buffer_in_buffer_list(real_bufnr)
+		then
 			-- TODO: this should be a delete function that is configurable
-			-- vim.cmd.bdelete(real_bufnr)
+			vim.cmd.bdelete(real_bufnr)
 			-- vim.cmd[delete_cmd](real_bufnr)
 		end
 	end
@@ -83,7 +91,7 @@ function M.sync_buffer_list()
 		buffer_lines
 	)
 
-	delete_buffers(M.buffer_list)
+	-- delete_buffers(M.buffer_list)
 end
 
 return M
