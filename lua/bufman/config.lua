@@ -19,6 +19,8 @@ M.default_config = {
 
 	buffer_delete_cmd = 'bdelete',
 
+	show_relative_path = true,
+
 	-- transparency
 	winblend = 0,
 	cursorline = true,

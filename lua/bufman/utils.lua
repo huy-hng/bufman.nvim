@@ -39,4 +39,16 @@ function M.is_valid_buffer(bufnr)
 	return is_listed and does_exist and bufname ~= ''
 end
 
+--- split string by separator (space by default)
+---@param input string string to separate
+---@param sep string? separator to separate with
+function string.split(input, sep)
+	sep = sep or '%s'
+	local t = {}
+	for str in string.gmatch(input, '([^' .. sep .. ']+)') do
+		table.insert(t, str)
+	end
+	return t
+end
+
 return M

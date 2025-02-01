@@ -24,7 +24,6 @@ local function create_window(config)
 
 		vim.api.nvim_set_option_value('filetype', 'bufman', { buf = bufnr })
 		vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = bufnr })
-		-- vim.api.nvim_set_option_value('buftype', 'nowrite', { buf = bufnr })
 		vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = bufnr })
 	end
 
@@ -48,7 +47,7 @@ local function create_window(config)
 	local win_id, win = popup.create(bufnr, win_config)
 
 	if config.winblend then
-		vim.wo[win_id].winblend = 100
+		vim.wo[win_id].winblend = config.winblend
 		vim.wo[win.border.win_id].winblend = config.winblend
 	end
 
@@ -99,11 +98,9 @@ end
 
 local function set_buffer_content(bufman_bufnr, buffer_list)
 	for i, bufnr in pairs(buffer_list) do
-		local bufname = vim.api.nvim_buf_get_name(bufnr)
-		local fname = filename.get_filename(bufname)
-		extmark.set_extmark(bufman_bufnr, i - 1, { { tostring(bufnr) .. ' ' }, { fname } })
+		local content = filename.build_default_bufname(bufnr)
+		extmark.set_extmark(bufman_bufnr, i - 1, content)
 	end
-
 end
 
 function M.open_menu(user_config)

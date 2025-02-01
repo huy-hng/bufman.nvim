@@ -1,14 +1,7 @@
 local Path = require('plenary.path')
+local config = require('bufman.config')
 
 local M = {}
-
-local function get_extension(filename) --
-	return vim.fn.fnamemodify(filename, ':e')
-end
-
-function M.test(item)
-	return Path:new(item):shorten()
-end
 
 function M.normalize_path(item)
 	if string.find(item, '.*:///.*') ~= nil then return item end
@@ -27,7 +20,7 @@ function M.get_icon(filename, opts)
 	local devicons = require('nvim-web-devicons')
 
 	if devicons then
-		local extension = get_extension(filename)
+		local extension = M.get_extension(filename)
 		local icon_fn = opts.hexcode and devicons.get_icon_color or devicons.get_icon
 
 		local f_icon, f_hl = icon_fn(filename, extension, { default = opts.default })
@@ -39,8 +32,67 @@ function M.get_icon(filename, opts)
 	return { icon, hl }
 end
 
-function M.get_filename(item)
-	return M.normalize_path(item)
+function M.get_path_folders(filename, folder_amount, normalized)
+	folder_amount = folder_amount or 0
+
+	if normalized then
+		local normalized = M.normalize_path(filename)
+		if type(normalized) ~= 'table' then filename = normalized end
+	end
+
+	local path = vim.fn.fnamemodify(filename, ':h')
+	local split = path:split('/')
+
+	if folder_amount == 0 then return split, 0 end
+
+	local folders = {}
+	if folder_amount > 0 and #split > 0 then
+		for i = #split - (folder_amount - 1), #split do
+			table.insert(folders, split[i])
+		end
+	end
+
+	local truncated = (#split - folder_amount)
+
+	return folders, truncated
+end
+
+function M.get_filename(filename, remove_extension)
+	local mods = ':t'
+	if remove_extension then mods = mods .. ':r' end
+	return filename == '' and '[No Name]' or vim.fn.fnamemodify(filename, mods)
+end
+
+function M.get_extension(filename) --
+	return vim.fn.fnamemodify(filename, ':e')
+end
+
+function M.test(item)
+	return Path:new(item):shorten()
+end
+
+function M.build_default_bufname(bufnr)
+	local conf = config.get_config()
+	local content = {}
+
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+	local icon_hl = M.get_icon(bufname)
+	table.insert(content, icon_hl)
+
+	local paths = M.get_path_folders(bufname, 0, conf.show_relative_path)
+	for _, path in ipairs(paths) do
+		table.insert(content, {path, 'Directory'})
+		table.insert(content, {'/', 'NonText'})
+	end
+
+	local fname = M.get_filename(bufname, true)
+	local extension = M.get_extension(bufname)
+
+	table.insert(content, {fname, 'Title'})
+	table.insert(content, {'.' .. extension .. ' ', 'NonText'})
+
+	return content
 end
 
 
