@@ -71,6 +71,17 @@ function M.test(item)
 	return Path:new(item):shorten()
 end
 
+function M.build_path(bufnr)
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+	local paths = M.get_path_folders(bufname, 0, conf.show_relative_path)
+	local path = {}
+	for _, dir in ipairs(paths) do
+		table.insert(path, {dir, 'Directory'})
+		table.insert(path, {'/', 'NonText'})
+	end
+	return path
+end
+
 function M.build_default_bufname(bufnr)
 	local conf = config.get_config()
 	local content = {}
@@ -79,11 +90,10 @@ function M.build_default_bufname(bufnr)
 
 	local icon_hl = M.get_icon(bufname)
 	table.insert(content, icon_hl)
-
-	local paths = M.get_path_folders(bufname, 0, conf.show_relative_path)
-	for _, path in ipairs(paths) do
-		table.insert(content, {path, 'Directory'})
-		table.insert(content, {'/', 'NonText'})
+	
+	local path = M.build_path(bufnr)
+	for _, path_hl in ipairs(path) do
+		table.insert(content, path_hl)
 	end
 
 	local fname = M.get_filename(bufname, true)
@@ -92,6 +102,16 @@ function M.build_default_bufname(bufnr)
 	table.insert(content, {fname, 'Title'})
 	table.insert(content, {'.' .. extension .. ' ', 'NonText'})
 
+	return content
+end
+
+function M.build_filename(bufnr)
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+	
+	local content = {}
+	table.insert(content, M.get_icon(bufname))
+	table.insert(content, {M.get_filename(bufname, true), 'Title'})
+	table.insert(content, {'.' .. M.get_extension(bufname) .. ' ', 'NonText'})
 	return content
 end
 
