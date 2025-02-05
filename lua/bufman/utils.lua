@@ -29,6 +29,8 @@ function M.is_bufman_buffer(bufnr)
 end
 
 
+---@param bufnr integer
+---@return boolean
 function M.is_valid_buffer(bufnr)
 	local bufname = vim.api.nvim_buf_get_name(bufnr)
 	local does_exist = vim.api.nvim_buf_is_valid(bufnr)
