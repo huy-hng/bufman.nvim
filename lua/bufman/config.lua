@@ -6,6 +6,7 @@ end
 
 function M.get_config() return M.config end
 
+---@enum config
 M.default_config = {
 	line_keys = '1234567890',
 	keymaps = {
@@ -18,6 +19,7 @@ M.default_config = {
 	height = 20,
 
 	buffer_delete_cmd = 'bdelete',
+	group_buffers = true,
 
 	show_relative_path = true,
 

@@ -2,10 +2,15 @@ local utils = require('bufman.utils')
 local sorter = require('bufman.sorter')
 local config = require('bufman.config')
 
+---@alias buffer_list integer[]
+
 local M = {
+	---@type buffer_list
 	buffer_list = {},
 }
 
+---comment
+---@param buffer_list buffer_list
 local function remove_buffers(buffer_list)
 	local function is_buffer_deleted(bufnr)
 		for _, real_bufnr in ipairs(vim.api.nvim_list_bufs()) do
