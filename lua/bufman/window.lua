@@ -4,6 +4,7 @@ local buffer = require('bufman.buffer')
 local extmark = require('bufman.extmark')
 local utils = require('bufman.utils')
 local filename = require('bufman.filename')
+local sorter = require('bufman.sorter')
 
 local M = {
 	win_id = nil,
@@ -63,12 +64,17 @@ local function create_window(config)
 	return { bufnr = bufnr, win_id = win_id }
 end
 
+---comment
+---@param bufnr integer
+---@param buffer_list integer[]
 local function set_buf_lines(bufnr, buffer_list)
 	local function get_undolevels()
 		return vim.api.nvim_get_option_value('undolevels', { buf = bufnr })
 	end
 
-	local function disallow_undo() vim.api.nvim_set_option_value('undolevels', -1, { buf = bufnr }) end
+	local function disallow_undo() --
+		vim.api.nvim_set_option_value('undolevels', -1, { buf = bufnr })
+	end
 
 	local function allow_undo(undolevels)
 		vim.api.nvim_set_option_value('undolevels', undolevels, { buf = bufnr })
@@ -77,10 +83,7 @@ local function set_buf_lines(bufnr, buffer_list)
 	local undolevels = get_undolevels()
 	disallow_undo()
 
-	local buffer_list_string = vim.tbl_map(
-		function(buf) return tostring(buf) end,
-		buffer_list
-	)
+	local buffer_list_string = vim.tbl_map(function(buf) return tostring(buf) end, buffer_list)
 	vim.api.nvim_buf_set_lines(bufnr, 0, #buffer_list_string, false, buffer_list_string)
 
 	allow_undo(undolevels)
@@ -89,11 +92,30 @@ end
 local function set_cursor_to_buffer(current_buf)
 	local current_buf_line
 	for i, bufnr in pairs(buffer.buffer_list) do
-		if bufnr == current_buf then
-			current_buf_line = i end
+		if bufnr == current_buf then current_buf_line = i end
 	end
 	-- set cursor to current buffer
 	if current_buf_line then vim.fn.cursor { current_buf_line, 1 } end
+end
+
+local function set_grouped_buffer_content(bufman_bufnr, buffer_list)
+	local linenr = 0
+	for i, group in pairs(sorter.group(buffer_list)) do
+		for j, bufnr in pairs(group) do
+			linenr = linenr + 1
+
+			local extra_opts = {}
+			if j == 1 then
+				extra_opts.virt_lines = {}
+				if i > 1 then
+					table.insert(extra_opts.virt_lines, { { ' ', '' } })
+				end
+				table.insert(extra_opts.virt_lines, filename.build_path(bufnr))
+			end
+			local content = filename.build_filename(bufnr)
+			extmark.set_extmark(bufman_bufnr, linenr - 1, content, extra_opts)
+		end
+	end
 end
 
 local function set_buffer_content(bufman_bufnr, buffer_list)
@@ -117,7 +139,12 @@ function M.open_menu(user_config)
 
 	set_buf_lines(M.bufnr, buffer.buffer_list)
 	set_cursor_to_buffer(current_buf)
-	set_buffer_content(M.bufnr, buffer.buffer_list)
+
+	if merged_config.group_buffers then
+		set_grouped_buffer_content(M.bufnr, buffer.buffer_list)
+	else
+		set_buffer_content(M.bufnr, buffer.buffer_list)
+	end
 end
 
 function M.close_menu()
