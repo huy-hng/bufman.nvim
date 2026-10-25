@@ -30,6 +30,7 @@ local sorting_functions = {
 }
 
 M.default_config = {
+	bdelete_cmd = 'bdelete',
 	line_keys = '1234567890',
 	-- line_keys = 'qwfphuyj',
 	select_menu_item_commands = {

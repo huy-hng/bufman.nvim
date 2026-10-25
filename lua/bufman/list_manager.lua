@@ -70,7 +70,7 @@ function M.apply_buffer_changes()
 	-- delete buffers
 	for _, mark in ipairs(M.window_buffers) do
 		if not is_buffer_in_marks(mark.filename) and is_deletable(mark.bufnr) then
-			vim.cmd.Bdelete(mark.bufnr)
+			vim.cmd[config.bdelete_cmd](mark.bufnr)
 		end
 	end
 
