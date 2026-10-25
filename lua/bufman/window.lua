@@ -117,11 +117,11 @@ local function set_buf_autocmds()
 			local cur_line = vim.fn.line('.')
 			if cur_line == 1 or cur_line == 2 then nvim.feedkeys('<C-y>', false) end
 		end, { buffer = M.bufnr }),
-		Autocmd('BufLeave', nil, M.close_menu, {
-			buffer = M.bufnr,
-			nested = true,
-			once = true,
-		}),
+		-- Autocmd('BufLeave', nil, M.close_menu, {
+		-- 	buffer = M.bufnr,
+		-- 	nested = true,
+		-- 	once = true,
+		-- }),
 		-- remove extmarks in current line when inserting
 		-- TODO: same for visual mode
 		Autocmd('InsertLeave', nil, function()
