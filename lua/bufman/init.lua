@@ -14,19 +14,19 @@ function M.setup(user_config)
 	-- tab_scope.on_tab_enter()
 
 	vim.api.nvim_set_hl(0, 'BufmanHiddenCursor', { blend = 100, nocombine = true })
-	local list_manger = require('bufman.list_manager')
+	local list_manager = require('bufman.list_manager')
 
 	Augroup('Bufman', {
-		-- Autocmd('SessionLoadPost', { list_manger.synchronize_buffer_list, true }),
-		-- Autocmd('SessionLoadPost', list_manger.synchronize_buffer_list),
+		-- Autocmd('SessionLoadPost', { list_manager.synchronize_buffer_list, true }),
+		-- Autocmd('SessionLoadPost', list_manager.synchronize_buffer_list),
 		-- Autocmd(
 		-- 	{ 'BufDelete', 'BufLeave', 'BufNew', 'BufEnter', 'BufRead' },
-		-- 	list_manger.synchronize_buffer_list
+		-- 	list_manager.synchronize_buffer_list
 		-- ),
-		-- Autocmd('SessionLoadPost', function() list_manger.synchronize_buffer_list() end),
+		-- Autocmd('SessionLoadPost', function() list_manager.synchronize_buffer_list() end),
 		-- Autocmd(
 		-- 	{ 'BufDelete', 'BufLeave', 'BufNew', 'BufEnter', 'BufRead' },
-		-- 	function() list_manger.synchronize_buffer_list() end
+		-- 	function() list_manager.synchronize_buffer_list() end
 		-- ),
 	})
 end
