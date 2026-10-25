@@ -5,6 +5,8 @@ function M.setup(user_config)
 	config.init(user_config)
 
 	local window = require('bufman.window')
+	local navigation = require('bufman.navigation')
+	M.change_buffer = navigation.change_buffer
 	M.open_menu = window.open_menu
 	M.close_menu = window.close_menu
 	M.toggle_menu = window.toggle_menu

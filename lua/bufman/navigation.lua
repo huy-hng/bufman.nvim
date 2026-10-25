@@ -19,7 +19,7 @@ local function get_current_buf_line()
 	return -1
 end
 
-function M.goto(direction)
+function M.change_buffer(direction)
 	-- list_manager.synchronize_marks()
 
 	local current_line = get_current_buf_line()
